@@ -12,14 +12,14 @@
 #
 # Env overrides:
 #   REPO_URL  git remote to clone        (default: HTTPS GitHub URL below)
-#   BRANCH    branch / tag / commit      (default: feat/lisi/codex-bridge)
+#   BRANCH    branch / tag / commit      (default: feat/lisi/codex-bridge-sh)
 #   DEST      checkout directory         (default: ~/.local/src/lark-channel-bridge)
 #   NO_RUN=1  set up only, don't launch  (build then exit)
 #
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/seedotlee/feishu-claude-code-bridge.git}"
-BRANCH="${BRANCH:-feat/lisi/codex-bridge}"
+BRANCH="${BRANCH:-feat/lisi/codex-bridge-sh}"
 DEST="${DEST:-$HOME/.local/src/lark-channel-bridge}"
 
 log() { printf '\033[1;36m▸ %s\033[0m\n' "$*"; }
