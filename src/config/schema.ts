@@ -6,6 +6,9 @@ export type AgentKind = 'claude' | 'codex';
 /** Codex reasoning-effort levels, passed as `model_reasoning_effort`. */
 export type CodexReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
 
+/** Claude Code effort levels, passed as `claude --effort <level>`. */
+export type ClaudeEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
 /**
  * SecretRef points at a secret stored outside this file — keeps secrets out
  * of `config.json` so backups / accidental git commits / log dumps don't
@@ -109,6 +112,12 @@ export interface AppPreferences {
    * = let Codex use its own default. Ignored when agent is 'claude'.
    */
   codexReasoningEffort?: CodexReasoningEffort;
+  /**
+   * Effort level for the Claude agent (`agent: 'claude'`). When set, the
+   * bridge passes `--effort <value>` to the `claude` CLI. Unset = let Claude
+   * use its own default. Ignored when agent is 'codex'.
+   */
+  claudeEffort?: ClaudeEffort;
   /** Reply rendering mode for IM (group/p2p) messages. Default 'card'. */
   messageReply?: MessageReplyMode;
   /**
@@ -234,6 +243,15 @@ export function getCodexReasoningEffort(
 ): CodexReasoningEffort | undefined {
   const raw = cfg.preferences?.codexReasoningEffort;
   return raw === 'minimal' || raw === 'low' || raw === 'medium' || raw === 'high'
+    ? raw
+    : undefined;
+}
+
+/** Resolve the Claude effort level. Unknown / unset → undefined (Claude
+ * picks its own default). */
+export function getClaudeEffort(cfg: Pick<AppConfig, 'preferences'>): ClaudeEffort | undefined {
+  const raw = cfg.preferences?.claudeEffort;
+  return raw === 'low' || raw === 'medium' || raw === 'high' || raw === 'xhigh' || raw === 'max'
     ? raw
     : undefined;
 }

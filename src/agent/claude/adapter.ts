@@ -3,14 +3,44 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import type { Readable } from 'node:stream';
 import { log } from '../../core/logger';
+import type { ClaudeEffort } from '../../config/schema';
 import type { AgentAdapter, AgentEvent, AgentRun, AgentRunOptions } from '../types';
 import { translateEvent } from './stream-json';
 
 export interface ClaudeAdapterOptions {
   binary?: string;
+  /** Effort level passed as `--effort <value>`. */
+  effort?: ClaudeEffort;
+}
+
+/** Per-run Claude config that isn't part of the generic AgentRunOptions. */
+interface ClaudeRunConfig {
+  effort?: ClaudeEffort;
 }
 
 type ClaudeChild = ChildProcessByStdio<null, Readable, Readable>;
+
+/**
+ * Build the argv (after the `claude` binary) for one run. Pure + exported so
+ * the flag mapping is unit-testable without spawning.
+ */
+export function buildClaudeArgs(opts: AgentRunOptions, cfg: ClaudeRunConfig = {}): string[] {
+  const args = [
+    '-p',
+    opts.prompt,
+    '--output-format',
+    'stream-json',
+    '--verbose',
+    '--permission-mode',
+    opts.permissionMode ?? 'bypassPermissions',
+    '--append-system-prompt',
+    BRIDGE_SYSTEM_PROMPT,
+  ];
+  if (opts.sessionId) args.push('--resume', opts.sessionId);
+  if (opts.model) args.push('--model', opts.model);
+  if (cfg.effort) args.push('--effort', cfg.effort);
+  return args;
+}
 
 const BRIDGE_SYSTEM_PROMPT = `# lark-channel-bridge 运行约定
 
@@ -104,11 +134,13 @@ sender_name: ...
 export class ClaudeAdapter implements AgentAdapter {
   readonly id = 'claude';
   readonly displayName = 'Claude Code';
+  readonly effort?: ClaudeEffort;
 
   private readonly binary: string;
 
   constructor(opts: ClaudeAdapterOptions = {}) {
     this.binary = opts.binary ?? 'claude';
+    this.effort = opts.effort;
   }
 
   async isAvailable(): Promise<boolean> {
@@ -120,19 +152,7 @@ export class ClaudeAdapter implements AgentAdapter {
   }
 
   run(opts: AgentRunOptions): AgentRun {
-    const args = [
-      '-p',
-      opts.prompt,
-      '--output-format',
-      'stream-json',
-      '--verbose',
-      '--permission-mode',
-      opts.permissionMode ?? 'bypassPermissions',
-      '--append-system-prompt',
-      BRIDGE_SYSTEM_PROMPT,
-    ];
-    if (opts.sessionId) args.push('--resume', opts.sessionId);
-    if (opts.model) args.push('--model', opts.model);
+    const args = buildClaudeArgs(opts, { effort: this.effort });
 
     const child = spawn(this.binary, args, {
       cwd: opts.cwd,

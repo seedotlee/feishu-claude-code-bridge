@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AppConfig } from './schema';
-import { getAgentKind, getCodexReasoningEffort } from './schema';
+import { getAgentKind, getClaudeEffort, getCodexReasoningEffort } from './schema';
 
 function cfg(agent?: unknown): AppConfig {
   return {
@@ -46,5 +46,28 @@ describe('getCodexReasoningEffort', () => {
 
   it('returns undefined for unrecognized values', () => {
     expect(getCodexReasoningEffort(withEffort('turbo'))).toBeUndefined();
+  });
+});
+
+function withClaudeEffort(effort?: unknown): AppConfig {
+  return {
+    accounts: { app: { id: 'cli_x', secret: 's', tenant: 'feishu' } },
+    preferences: { claudeEffort: effort } as never,
+  };
+}
+
+describe('getClaudeEffort', () => {
+  it('returns undefined when unset (let claude use its own default)', () => {
+    expect(getClaudeEffort(withClaudeEffort())).toBeUndefined();
+  });
+
+  it('returns the configured effort level', () => {
+    expect(getClaudeEffort(withClaudeEffort('medium'))).toBe('medium');
+    expect(getClaudeEffort(withClaudeEffort('xhigh'))).toBe('xhigh');
+    expect(getClaudeEffort(withClaudeEffort('max'))).toBe('max');
+  });
+
+  it('returns undefined for unrecognized values', () => {
+    expect(getClaudeEffort(withClaudeEffort('minimal'))).toBeUndefined();
   });
 });

@@ -1,5 +1,5 @@
 import type { AppConfig } from '../config/schema';
-import { getAgentKind, getCodexReasoningEffort } from '../config/schema';
+import { getAgentKind, getClaudeEffort, getCodexReasoningEffort } from '../config/schema';
 import { ClaudeAdapter } from './claude/adapter';
 import { CodexAdapter } from './codex/adapter';
 import type { AgentAdapter } from './types';
@@ -12,5 +12,5 @@ export { CodexAdapter } from './codex/adapter';
 export function createAgent(cfg: Pick<AppConfig, 'preferences'>): AgentAdapter {
   return getAgentKind(cfg) === 'codex'
     ? new CodexAdapter({ reasoningEffort: getCodexReasoningEffort(cfg) })
-    : new ClaudeAdapter();
+    : new ClaudeAdapter({ effort: getClaudeEffort(cfg) });
 }
