@@ -1,3 +1,5 @@
+import type { AgentKind } from '../config/schema';
+
 export type AgentEvent =
   | { type: 'system'; sessionId?: string; cwd?: string; model?: string }
   | { type: 'text'; delta: string }
@@ -42,7 +44,7 @@ export interface AgentRun {
 }
 
 export interface AgentAdapter {
-  readonly id: string;
+  readonly id: AgentKind;
   readonly displayName: string;
   isAvailable(): Promise<boolean>;
   run(opts: AgentRunOptions): AgentRun;
